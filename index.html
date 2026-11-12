@@ -29,11 +29,15 @@
           <span>舰体 <b id="hpPct">100%</b></span>
           <span id="statusIcons" class="status-icons"></span>
         </div>
+        <div class="ship-meta ship-meta--sub">
+          <span>隐蔽 <b id="concealVal">5.2 km</b></span>
+          <span id="spotState" class="spot-state">未被发现</span>
+        </div>
       </section>
 
       <!-- 战况 -->
       <div class="battle-info">
-        <div class="mission">作战目标 <span>/</span> 击沉敌方舰队 <b id="paceTag" class="pace-tag">慢节奏</b></div>
+        <div class="mission">作战目标 <span>/</span> 击沉敌方舰队 <b id="paceTag" class="pace-tag">标准</b> <b id="viewTag" class="view-tag">广域 ×2.5</b></div>
         <div class="scoreline">
           <span class="score-enemy"><b id="enemyLeft">6</b> 敌舰残存</span>
           <span class="sep"></span>
@@ -49,7 +53,8 @@
       <section class="panel radar">
         <div class="panel__head"><span>战场态势</span><em>RADAR · 8 km</em></div>
         <canvas id="minimap" width="240" height="240"></canvas>
-        <div class="radar-legend"><i class="dot dot--ally"></i>本舰<i class="dot dot--enemy"></i>敌舰<i class="dot dot--torp"></i>鱼雷</div>
+        <div class="radar-legend"><i class="dot dot--ally"></i>本舰<i class="dot dot--enemy"></i>敌舰<i class="dot dot--torp-ally"></i>我方雷<i class="dot dot--torp-enemy"></i>敌方雷</div>
+        <div class="radar-hint" id="radarHint">搜索中</div>
       </section>
     </div>
 
@@ -89,6 +94,7 @@
           <button id="btnSmoke" class="mini-btn tac-btn">烟雾 Z</button>
           <button id="btnBoost" class="mini-btn tac-btn">增压 B</button>
         </div>
+        <div class="ammo-legend"><span><i></i>HE 琥珀</span><span><i></i>AP 冰蓝</span><span><i></i>敌 HE</span><span><i></i>敌 AP</span></div>
       </section>
 
       <!-- 射击诸元 -->
@@ -105,7 +111,8 @@
 
     <div class="hud-side">
       <button id="btnFleet" class="icon-btn" title="舰队编成（点击打开 / C）">编</button>
-      <button id="btnPace" class="icon-btn pace-on" title="战斗节奏（点击切换 / T）">慢</button>
+      <button id="btnView" class="icon-btn" title="视角：广域 ×2.5 · 点击/G 切换 全图→广域→战术 · 滚轮连续缩放 · 镜头跟随本舰">广</button>
+      <button id="btnPace" class="icon-btn pace-on" title="战斗节奏：标准（100% 流速）→ 点此切到快速（500%） / T">标</button>
       <button id="btnSound" class="icon-btn" title="音效开关">♪</button>
       <button id="btnVoice" class="icon-btn" title="语音播报开关（点击切换 / V）">🔊</button>
       <button id="btnPause" class="icon-btn" title="暂停">Ⅱ</button>
@@ -133,33 +140,35 @@
 
   <!-- ============ 开始界面 ============ -->
   <div id="overlayStart" class="overlay">
-    <div class="overlay-card">
+    <div class="overlay-card overlay-card--start">
+      <div class="start-scroll">
       <div class="eyebrow">NAVAL COMBAT DEMO <span>·</span> BUILD 0.1</div>
       <h1>钢铁怒潮 <span>IRON TIDE</span></h1>
-      <p class="lead">指挥 9 艘完全体战舰中的一艘——从鱼雷驱逐舰到巨炮战列舰，在群岛海域迎战敌方舰队。<br>预判提前量、切换 HE / AP 弹种、用烟幕与鱼雷终结重甲目标。</p>
+      <p class="lead">指挥 12 艘完全体战舰中的一艘——从鱼雷驱逐舰到巨炮战列舰，在双峰海峡迎战敌方舰队。<br>预判提前量、切换 HE / AP 弹种、用烟幕与鱼雷终结重甲目标。</p>
       <div class="brief">
         <div class="brief-col">
           <h3>操舰</h3>
           <ul>
-            <li><kbd>W</kbd><kbd>S</kbd> 升 / 降车钟档位</li>
+            <li><kbd>W</kbd><kbd>S</kbd> 升 / 降车钟档位（开局极速 Ⅳ）</li>
             <li><kbd>A</kbd><kbd>D</kbd> 左 / 右满舵（按住）</li>
             <li><kbd>Q</kbd> 舵回中 · <kbd>E</kbd> 急停</li>
-            <li><kbd>滚轮</kbd> 缩放战场视野</li>
+            <li><kbd>滚轮</kbd> 缩放视野 · <kbd>G</kbd> 全图 / 广域 / 战术</li>
           </ul>
         </div>
         <div class="brief-col">
           <h3>作战</h3>
           <ul>
             <li><kbd>鼠标</kbd> 瞄准 · <kbd>左键</kbd><kbd>空格</kbd> 齐射</li>
-            <li><kbd>R</kbd> 切换 HE / AP · <kbd>F</kbd> 鱼雷</li>
+            <li><kbd>R</kbd> 切换 HE / AP · <kbd>F</kbd> 鱼雷（按住连发）</li>
             <li><kbd>Z</kbd> 烟幕 · <kbd>B</kbd> 引擎增压</li>
-            <li><kbd>X</kbd> 火控辅助 · <kbd>T</kbd> 节奏 · <kbd>C</kbd> 编成</li>
+            <li><kbd>X</kbd> 火控辅助 · <kbd>右键</kbd> 自动导航</li>
             <li><kbd>M</kbd> 静音 · <kbd>V</kbd> 语音 · <kbd>P</kbd> 暂停</li>
           </ul>
         </div>
       </div>
       <div id="fleetSetup"></div>
-      <div class="tip-line"><i></i>默认<span>慢节奏 · 20% 流速</span>：舰船、炮弹与敌舰动作整体放慢，落点预警有充分时间规避；按 <kbd>T</kbd> 切回标准节奏，战斗中按 <kbd>C</kbd> 随时调整编成。把准星压在<span>绿色提前量标记</span>上开火，<span>AP 弹命中核心区伤害 ×2</span>，触屏按 <span>X</span> 自动解算。</div>
+      </div>
+      <div class="tip-line"><i></i><span>标准 100% 流速</span> / <kbd>T</kbd> 快速 500% / <kbd>C</kbd> 编成。复刻<span>双峰海峡（Two Brothers）</span>：双方各 <span>12 舰</span>从西南 / 东北<span>对角</span>出发，中央「兄弟岛」夹出可直穿的窄水道，<span>东西岛群</span>是主战线，相距 70 km、超出所有主炮射程；<span>战列靠后外线、巡洋居中、驱逐走侧翼</span>。12 舰的航速、装填、炮塔与<span>隐蔽</span>各不相同。<span>AP 冰蓝</span>击穿核心 ×2（打 DD 易过穿），<span>HE 琥珀</span>稳定伤害 + 点燃；我方雷青蓝、敌方雷橙红。未侦测到的敌舰不进视野与雷达，<span>烟幕 / 岛后</span>可脱离锁定，开炮会立刻暴露。主炮<span>单击逐门发射、双击齐射</span>，鱼雷逐座发射、<span>每座独立装填</span>。压住<span>绿色提前量</span>开火，触屏按 <span>X</span> 自动解算。<span>本舰沉没后转入观战</span>，友军继续作战，直到一方舰队全灭才结算。</div>
       <button id="btnStart" class="cta">起 航 <span>▸</span></button>
       <div class="build-note">纯 Canvas 2D + Web Audio · 零依赖 · 可离线运行 · 支持触控</div>
     </div>
