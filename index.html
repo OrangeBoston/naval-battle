@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#071722">
+<link rel="icon" href="data:,">
+<title>钢铁怒潮 IRON TIDE · 海战 Demo</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="sea"></canvas>
+  <div class="scanlines"></div>
+  <div class="vignette"></div>
+
+  <!-- ============ HUD ============ -->
+  <div id="hud" class="hud">
+    <div class="hud-top">
+      <!-- 本舰状态 -->
+      <section class="panel ship-card">
+        <div class="panel__head">
+          <span class="tag tag--ally" id="shipTag">DD · 驱逐舰</span>
+          <b class="ship-name" id="shipName">睦月 <em>MUTSUKI</em></b>
+          <div class="commander">指挥官 <b id="commanderName">大肥鱼</b></div>
+        </div>
+        <div class="bar bar--hp"><i id="hpFill"></i><span id="hpText">11 300 / 11 300</span></div>
+        <div class="ship-meta">
+          <span>舰体 <b id="hpPct">100%</b></span>
+          <span id="statusIcons" class="status-icons"></span>
+        </div>
+      </section>
+
+      <!-- 战况 -->
+      <div class="battle-info">
+        <div class="mission">作战目标 <span>/</span> 击沉敌方舰队 <b id="paceTag" class="pace-tag">慢节奏</b></div>
+        <div class="scoreline">
+          <span class="score-enemy"><b id="enemyLeft">6</b> 敌舰残存</span>
+          <span class="sep"></span>
+          <span class="score-ally"><b id="allyLeft">5</b> 友军</span>
+          <span class="sep"></span>
+          <span class="score-kill"><b id="kills">0</b> 击沉</span>
+          <span class="sep"></span>
+          <span class="score-time" id="clock">00:00</span>
+        </div>
+      </div>
+
+      <!-- 雷达 -->
+      <section class="panel radar">
+        <div class="panel__head"><span>战场态势</span><em>RADAR · 8 km</em></div>
+        <canvas id="minimap" width="240" height="240"></canvas>
+        <div class="radar-legend"><i class="dot dot--ally"></i>本舰<i class="dot dot--enemy"></i>敌舰<i class="dot dot--torp"></i>鱼雷</div>
+      </section>
+    </div>
+
+    <div class="hud-bottom">
+      <!-- 车钟 / 舵 -->
+      <section class="panel helm">
+        <div class="panel__head"><span>车钟 / 舵</span><em>HELM</em></div>
+        <div class="helm-body">
+          <div class="speed-block">
+            <div class="speed-val"><b id="speedVal">0</b><span>节</span></div>
+            <div class="speed-sub">航速</div>
+          </div>
+          <div class="throttle" id="throttle">
+            <button data-gear="-1" title="倒车">倒</button>
+            <button data-gear="0" title="停车">停</button>
+            <button data-gear="1" title="微速">Ⅰ</button>
+            <button data-gear="2" title="半速">Ⅱ</button>
+            <button data-gear="3" title="全速">Ⅲ</button>
+            <button data-gear="4" title="极速">Ⅳ</button>
+          </div>
+        </div>
+        <div class="rudder-bar"><i id="rudderFill"></i><span id="rudderText">正舵</span></div>
+      </section>
+
+      <!-- 武器 -->
+      <section class="panel weapons">
+        <div class="panel__head"><span>武器系统</span><button id="btnAssist" class="mini-btn">火控辅助 OFF <kbd>X</kbd></button></div>
+        <div class="weapon-row">
+          <div class="weapon-label"><span class="key">左键 / 空格</span> 主炮齐射 <em id="gunLabel">120mm ×2 · 900m/s</em><button id="btnAmmo" class="mini-btn ammo-btn" title="切换弹种（R）">HE</button></div>
+          <div class="bar bar--gun"><i id="gunFill"></i><span id="gunText">就绪</span></div>
+        </div>
+        <div class="weapon-row">
+          <div class="weapon-label"><span class="key">F</span> 鱼雷发射管 <em id="torpLabel">610mm 3联装 ×2</em></div>
+          <div class="bar bar--torp"><i id="torpFill"></i><span id="torpText">就绪</span></div>
+        </div>
+        <div class="tactical-row">
+          <button id="btnSmoke" class="mini-btn tac-btn">烟雾 Z</button>
+          <button id="btnBoost" class="mini-btn tac-btn">增压 B</button>
+        </div>
+      </section>
+
+      <!-- 射击诸元 -->
+      <section class="panel aim-info">
+        <div class="panel__head"><span>射击诸元</span><em>FCS</em></div>
+        <div class="aim-grid">
+          <div><label>距离</label><b id="aimDist">--</b><small>m</small></div>
+          <div><label>弹飞</label><b id="aimTime">--</b><small>s</small></div>
+          <div><label>炮塔</label><b id="turretState">--</b><small></small></div>
+        </div>
+        <div class="aim-tip" id="aimTip">将准星压在绿色提前量标记上开火</div>
+      </section>
+    </div>
+
+    <div class="hud-side">
+      <button id="btnFleet" class="icon-btn" title="舰队编成（点击打开 / C）">编</button>
+      <button id="btnPace" class="icon-btn pace-on" title="战斗节奏（点击切换 / T）">慢</button>
+      <button id="btnSound" class="icon-btn" title="音效开关">♪</button>
+      <button id="btnVoice" class="icon-btn" title="语音播报开关（点击切换 / V）">🔊</button>
+      <button id="btnPause" class="icon-btn" title="暂停">Ⅱ</button>
+      <button id="btnHelp" class="icon-btn" title="操作说明">?</button>
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <div id="killFeed" class="kill-feed"></div>
+  </div>
+
+  <!-- ============ 移动端触控 ============ -->
+  <div id="touch" class="touch">
+    <div class="touch-left">
+      <div id="rudderPad" class="rudder-pad"><div class="rudder-pad__base"></div><div id="rudderKnob" class="rudder-pad__knob"></div><span>左右转舵</span></div>
+      <div class="gear-pad">
+        <button id="gearUp">＋</button>
+        <button id="gearDown">－</button>
+      </div>
+    </div>
+    <div class="touch-right">
+      <button id="btnTorpTouch" class="fire-btn fire-btn--torp"><b>鱼雷</b><small>TORP</small></button>
+      <button id="btnFireTouch" class="fire-btn fire-btn--main"><b>开火</b><small>FIRE</small></button>
+    </div>
+  </div>
+
+  <!-- ============ 开始界面 ============ -->
+  <div id="overlayStart" class="overlay">
+    <div class="overlay-card">
+      <div class="eyebrow">NAVAL COMBAT DEMO <span>·</span> BUILD 0.1</div>
+      <h1>钢铁怒潮 <span>IRON TIDE</span></h1>
+      <p class="lead">指挥 9 艘完全体战舰中的一艘——从鱼雷驱逐舰到巨炮战列舰，在群岛海域迎战敌方舰队。<br>预判提前量、切换 HE / AP 弹种、用烟幕与鱼雷终结重甲目标。</p>
+      <div class="brief">
+        <div class="brief-col">
+          <h3>操舰</h3>
+          <ul>
+            <li><kbd>W</kbd><kbd>S</kbd> 升 / 降车钟档位</li>
+            <li><kbd>A</kbd><kbd>D</kbd> 左 / 右满舵（按住）</li>
+            <li><kbd>Q</kbd> 舵回中 · <kbd>E</kbd> 急停</li>
+            <li><kbd>滚轮</kbd> 缩放战场视野</li>
+          </ul>
+        </div>
+        <div class="brief-col">
+          <h3>作战</h3>
+          <ul>
+            <li><kbd>鼠标</kbd> 瞄准 · <kbd>左键</kbd><kbd>空格</kbd> 齐射</li>
+            <li><kbd>R</kbd> 切换 HE / AP · <kbd>F</kbd> 鱼雷</li>
+            <li><kbd>Z</kbd> 烟幕 · <kbd>B</kbd> 引擎增压</li>
+            <li><kbd>X</kbd> 火控辅助 · <kbd>T</kbd> 节奏 · <kbd>C</kbd> 编成</li>
+            <li><kbd>M</kbd> 静音 · <kbd>V</kbd> 语音 · <kbd>P</kbd> 暂停</li>
+          </ul>
+        </div>
+      </div>
+      <div id="fleetSetup"></div>
+      <div class="tip-line"><i></i>默认<span>慢节奏 · 20% 流速</span>：舰船、炮弹与敌舰动作整体放慢，落点预警有充分时间规避；按 <kbd>T</kbd> 切回标准节奏，战斗中按 <kbd>C</kbd> 随时调整编成。把准星压在<span>绿色提前量标记</span>上开火，<span>AP 弹命中核心区伤害 ×2</span>，触屏按 <span>X</span> 自动解算。</div>
+      <button id="btnStart" class="cta">起 航 <span>▸</span></button>
+      <div class="build-note">纯 Canvas 2D + Web Audio · 零依赖 · 可离线运行 · 支持触控</div>
+    </div>
+  </div>
+
+  <!-- ============ 结算界面 ============ -->
+  <div id="overlayResult" class="overlay hidden">
+    <div class="overlay-card overlay-card--result">
+      <div class="eyebrow" id="resultEyebrow">BATTLE REPORT</div>
+      <h1 id="resultTitle">战斗结束</h1>
+      <p class="lead" id="resultDesc"></p>
+      <div class="stats">
+        <div><label>造成伤害</label><b id="statDamage">0</b></div>
+        <div><label>主炮命中</label><b id="statHit">0%</b></div>
+        <div><label>击沉敌舰</label><b id="statKills">0</b></div>
+        <div><label>作战时长</label><b id="statTime">00:00</b></div>
+      </div>
+      <div class="result-actions">
+        <button id="btnRestart" class="cta">再次出击 <span>▸</span></button>
+        <button id="btnBackFleet" class="cta cta--ghost">调整编成</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 舰队编成（战斗中） ============ -->
+  <div id="overlayFleet" class="overlay hidden">
+    <div class="overlay-card overlay-card--small">
+      <div class="eyebrow">FLEET COMMAND</div>
+      <h1>舰队编成</h1>
+      <p class="lead" style="margin:8px 0 16px">战场已暂停。更换本舰、增派友军或调整敌舰数量，关闭后立即生效。</p>
+      <div id="fleetLive"></div>
+      <button id="btnFleetClose" class="cta">返回战场 <span>▸</span></button>
+    </div>
+  </div>
+
+  <!-- ============ 暂停 / 帮助 ============ -->
+  <div id="overlayPause" class="overlay hidden">
+    <div class="overlay-card overlay-card--small">
+      <div class="eyebrow">SYSTEM</div>
+      <h1 id="pauseTitle">已暂停</h1>
+      <div id="pauseBody" class="pause-body"></div>
+      <button id="btnResume" class="cta">返回战场 <span>▸</span></button>
+    </div>
+  </div>
+</div>
+
+<script src="js/sounds.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/voice.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

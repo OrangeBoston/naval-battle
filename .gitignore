@@ -1,0 +1,10 @@
+# WorkBuddy 项目数据（含内部配置/记忆，禁止上传）
+.workbuddy/
+
+# 原始素材下载与打包（可由 tools/ 重新生成，体积大且非运行必需）
+sounds/raw/
+
+# 操作系统/编辑器垃圾文件
+.DS_Store
+Thumbs.db
+desktop.ini
