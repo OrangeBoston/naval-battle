@@ -1,5 +1,9 @@
-# WorkBuddy 项目数据（含内部配置/记忆，禁止上传）
-.workbuddy/
+# WorkBuddy 项目笔记：仅同步 memory/ 下的 Markdown，供多机协作
+# 其余本机缓存 / 配置 / 会话数据一律忽略，避免公开仓库泄露
+.workbuddy/*
+!.workbuddy/memory/
+.workbuddy/memory/*
+!.workbuddy/memory/*.md
 
 # 原始素材下载与打包（可由 tools/ 重新生成，体积大且非运行必需）
 sounds/raw/
